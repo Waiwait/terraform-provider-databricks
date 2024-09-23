@@ -15,31 +15,37 @@ type CustomizableSchema struct {
 }
 
 // ConstructCustomizableSchema constructs a CustomizableSchema given a map from string to AttributeBuilder.
-func ConstructCustomizableSchema(attributes map[string]AttributeBuilder) *CustomizableSchema {
-	attr := AttributeBuilder(SingleNestedAttributeBuilder{Attributes: attributes})
+func ConstructCustomizableSchema(nestedObject NestedBlockObject) *CustomizableSchema {
+	attr := AttributeBuilder(SingleNestedBlockBuilder{NestedObject: nestedObject})
 	return &CustomizableSchema{attr: attr}
 }
 
 // ToAttributeMap converts CustomizableSchema into a map from string to Attribute.
-func (s *CustomizableSchema) ToAttributeMap() map[string]AttributeBuilder {
+func (s *CustomizableSchema) ToAttributeMap() NestedBlockObject {
 	return attributeToMap(&s.attr)
 }
 
 // attributeToMap converts AttributeBuilder into a map from string to AttributeBuilder.
-func attributeToMap(attr *AttributeBuilder) map[string]AttributeBuilder {
-	var m map[string]AttributeBuilder
+func attributeToMap(attr *AttributeBuilder) NestedBlockObject {
+	var res = NestedBlockObject{}
 	switch attr := (*attr).(type) {
 	case SingleNestedAttributeBuilder:
-		m = attr.Attributes
+		res.Attributes = attr.Attributes
 	case ListNestedAttributeBuilder:
-		m = attr.NestedObject.Attributes
+		res.Attributes = attr.NestedObject.Attributes
 	case MapNestedAttributeBuilder:
-		m = attr.NestedObject.Attributes
+		res.Attributes = attr.NestedObject.Attributes
+	case SingleNestedBlockBuilder:
+		res.Attributes = attr.NestedObject.Attributes
+		res.Blocks = attr.NestedObject.Blocks
+	case ListNestedBlockBuilder:
+		res.Attributes = attr.NestedObject.Attributes
+		res.Blocks = attr.NestedObject.Blocks
 	default:
 		panic(fmt.Errorf("cannot convert to map, attribute is not nested"))
 	}
 
-	return m
+	return res
 }
 
 func (s *CustomizableSchema) AddValidator(v any, path ...string) *CustomizableSchema {
@@ -170,17 +176,33 @@ func navigateSchemaWithCallback(s *AttributeBuilder, cb func(AttributeBuilder) A
 	current_scm := s
 	for i, p := range path {
 		m := attributeToMap(current_scm)
+		m_attr := m.Attributes
+		m_block := m.Blocks
 
-		v, ok := m[p]
+		v, ok := m_attr[p]
+		if ok {
+			if i == len(path)-1 {
+				m_attr[p] = cb(v)
+				return m_attr[p], nil
+			}
+			current_scm = &v
+			continue
+		}
+
+		v, ok = m_block[p]
+		if ok {
+			if i == len(path)-1 {
+				m_block[p] = cb(v)
+				return m_block[p], nil
+			}
+			current_scm = &v
+			continue
+		}
+
 		if !ok {
 			return nil, fmt.Errorf("missing key %s", p)
 		}
 
-		if i == len(path)-1 {
-			m[p] = cb(v)
-			return m[p], nil
-		}
-		current_scm = &v
 	}
 	return nil, fmt.Errorf("path %v is incomplete", path)
 }

@@ -70,19 +70,29 @@ func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataReq
 }
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		for field, attribute := range c.ToAttributeMap().Attributes {
+			switch attribute.(type) {
+			case tfschema.StringAttributeBuilder:
+				c.AddPlanModifier(stringplanmodifier.RequiresReplace(), field)
+			case tfschema.SingleNestedAttributeBuilder:
+				c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
+			}
+		}
+		for field, attribute := range c.ToAttributeMap().Blocks {
+			switch attribute.(type) {
+			case tfschema.StringAttributeBuilder:
+				c.AddPlanModifier(stringplanmodifier.RequiresReplace(), field)
+			case tfschema.ListNestedBlockBuilder:
+				c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
+			}
+		}
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Library",
-		Attributes: tfschema.ResourceStructToSchemaMap(LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			for field, attribute := range c.ToAttributeMap() {
-				switch attribute.(type) {
-				case tfschema.StringAttributeBuilder:
-					c.AddPlanModifier(stringplanmodifier.RequiresReplace(), field)
-				case tfschema.SingleNestedAttributeBuilder:
-					c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
-				}
-			}
-			return c
-		}),
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 

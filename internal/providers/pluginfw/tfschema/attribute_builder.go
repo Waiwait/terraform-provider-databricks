@@ -11,6 +11,8 @@ import (
 type AttributeBuilder interface {
 	BuildDataSourceAttribute() dataschema.Attribute
 	BuildResourceAttribute() schema.Attribute
+	BuildDataSourceBlock() dataschema.Block
+	BuildResourceBlock() schema.Block
 	SetOptional() AttributeBuilder
 	SetRequired() AttributeBuilder
 	SetSensitive() AttributeBuilder
@@ -30,12 +32,32 @@ func BuildDataSourceAttributeMap(attributes map[string]AttributeBuilder) map[str
 	return dataSourceAttributes
 }
 
+func BuildDataSourceBlockMap(attributes map[string]AttributeBuilder) map[string]dataschema.Block {
+	dataSourceAttributes := make(map[string]dataschema.Block)
+
+	for key, attribute := range attributes {
+		dataSourceAttributes[key] = attribute.BuildDataSourceBlock()
+	}
+
+	return dataSourceAttributes
+}
+
 // BuildResourceAttributeMap takes a map from string to AttributeBuilder and returns a map from string to resource.schema.Attribute.
 func BuildResourceAttributeMap(attributes map[string]AttributeBuilder) map[string]schema.Attribute {
 	resourceAttributes := make(map[string]schema.Attribute)
 
 	for key, attribute := range attributes {
 		resourceAttributes[key] = attribute.BuildResourceAttribute()
+	}
+
+	return resourceAttributes
+}
+
+func BuildResourceBlockMap(attributes map[string]AttributeBuilder) map[string]schema.Block {
+	resourceAttributes := make(map[string]schema.Block)
+
+	for key, attribute := range attributes {
+		resourceAttributes[key] = attribute.BuildResourceBlock()
 	}
 
 	return resourceAttributes

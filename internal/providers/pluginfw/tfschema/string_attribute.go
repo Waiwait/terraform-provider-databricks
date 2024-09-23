@@ -1,6 +1,9 @@
 package tfschema
 
 import (
+	"fmt"
+
+	"github.com/databricks/terraform-provider-databricks/common"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -38,6 +41,14 @@ func (a StringAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 		Validators:         a.Validators,
 		PlanModifiers:      a.PlanModifiers,
 	}
+}
+
+func (a StringAttributeBuilder) BuildDataSourceBlock() dataschema.Block {
+	panic(fmt.Errorf("BuildDataSourceBlock should never be called for StringAttributeBuilder. %s", common.TerraformBugErrorMessage))
+}
+
+func (a StringAttributeBuilder) BuildResourceBlock() schema.Block {
+	panic(fmt.Errorf("BuildResourceBlock should never be called for StringAttributeBuilder. %s", common.TerraformBugErrorMessage))
 }
 
 func (a StringAttributeBuilder) SetOptional() AttributeBuilder {

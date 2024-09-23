@@ -1,6 +1,9 @@
 package tfschema
 
 import (
+	"fmt"
+
+	"github.com/databricks/terraform-provider-databricks/common"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -42,6 +45,14 @@ func (a ListNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 		Validators:         a.Validators,
 		PlanModifiers:      a.PlanModifiers,
 	}
+}
+
+func (a ListNestedAttributeBuilder) BuildDataSourceBlock() dataschema.Block {
+	panic(fmt.Errorf("BuildDataSourceBlock should never be called for ListNestedAttributeBuilder. %s", common.TerraformBugErrorMessage))
+}
+
+func (a ListNestedAttributeBuilder) BuildResourceBlock() schema.Block {
+	panic(fmt.Errorf("BuildResourceBlock should never be called for ListNestedAttributeBuilder. %s", common.TerraformBugErrorMessage))
 }
 
 func (a ListNestedAttributeBuilder) SetOptional() AttributeBuilder {
