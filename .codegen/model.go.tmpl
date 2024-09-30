@@ -24,11 +24,15 @@ import (
 type {{.PascalName}} struct {
     {{- range .Fields}}
     {{.Comment "    // " 80}}
-    {{.PascalName}} {{if .IsOptionalObject}}*{{end}}{{template "type" .Entity}} `{{template "field-tag" . }}`{{end}}
+	{{template "field" .}}{{if .Entity.IsComputed }}{{printf "\n"}}_Original{{template "field" .}}{{end}}{{end}}
 }
 
 {{end}}
 {{end}}
+
+{{- define "field" -}}
+{{.PascalName}} {{if .IsOptionalObject}}*{{end}}{{template "type" .Entity}} `{{template "field-tag" . }}`
+{{- end -}}
 
 {{- define "field-tag" -}}
 	{{if .IsJson}}tfsdk:"{{if and (ne .Entity.Terraform nil) (ne .Entity.Terraform.Alias "") }}{{.Entity.Terraform.Alias}}{{else}}{{.Name}}{{end}}" tf:"{{if not .Required}}optional{{end}}"{{else}}tfsdk:"-"{{end -}}
